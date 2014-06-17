@@ -23,8 +23,40 @@ module SendWithUs
       @configuration = SendWithUs::Config.new(settings)
     end
 
-    def send_with(email_id, to, data = {}, from = {}, cc={}, bcc={}, files=[])
+    # custom 8tracks method
+    def send(email_id, to, data = {}, params={})
+      if email_id.nil?
+        raise SendWithUs::ApiNilEmailId, 'email_id cannot be nil'
+      end
 
+      payload = { 
+        email_id: email_id, 
+        recipient: to,
+        email_data: data 
+      }
+
+      if files = params.delete(:files)
+        files.each do |path|
+          file = open(path).read
+          id = File.basename(path)
+          data = Base64.encode64(file)
+          if payload[:files].nil?
+            payload[:files] = []
+          end
+          payload[:files] << {id: id, data: data}
+        end
+      end
+
+      if params.any?
+        payload.merge!(params)
+      end
+
+      payload = payload.to_json
+      SendWithUs::ApiRequest.new(@configuration).post(:send, payload)
+    end
+
+
+    def send_with(email_id, to, data = {}, from = {}, cc={}, bcc={}, files=[])
       if email_id.nil?
         raise SendWithUs::ApiNilEmailId, 'email_id cannot be nil'
       end
