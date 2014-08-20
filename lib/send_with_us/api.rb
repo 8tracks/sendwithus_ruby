@@ -73,7 +73,7 @@ module SendWithUs
 
     # custom 8tracks method
     def send(email_id, to, data = {}, params={})
-      payload_json = build_send_payload.to_json
+      payload_json = build_send_payload(email_id, to, data, params).to_json
       SendWithUs::ApiRequest.new(@configuration).post(:send, payload_json)
     end
 
