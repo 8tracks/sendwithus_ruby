@@ -23,16 +23,15 @@ module SendWithUs
       @configuration = SendWithUs::Config.new(settings)
     end
 
-    # custom 8tracks method
-    def send(email_id, to, data = {}, params={})
+    def build_send_payload(email_id, to, data ={}, params = {})
       if email_id.nil?
         raise SendWithUs::ApiNilEmailId, 'email_id cannot be nil'
       end
 
-      payload = { 
-        email_id: email_id, 
+      payload = {
+        email_id: email_id,
         recipient: to,
-        email_data: data 
+        email_data: data
       }
 
       if files = params.delete(:files)
@@ -50,9 +49,32 @@ module SendWithUs
       if params.any?
         payload.merge!(params)
       end
+      payload
+    end
 
-      payload = payload.to_json
-      SendWithUs::ApiRequest.new(@configuration).post(:send, payload)
+
+    # Sends multiple emails through one post request
+    # send_params : array of send's params
+    def batched_send(send_params_array)
+      debugger
+      batched_payload = []
+
+      send_params_array.each do |sp|
+        batched_payload << {
+          path: '/api/v1/send',
+          method: 'POST',
+          body: build_send_payload(*sp)
+        }
+      end
+
+      batched_payload_json = batched_payload.to_json
+      SendWithUs::ApiRequest.new(@configuration).post(:batch, batched_payload_json)
+    end
+
+    # custom 8tracks method
+    def send(email_id, to, data = {}, params={})
+      payload_json = build_send_payload.to_json
+      SendWithUs::ApiRequest.new(@configuration).post(:send, payload_json)
     end
 
 
