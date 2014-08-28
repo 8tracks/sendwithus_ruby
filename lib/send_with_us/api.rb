@@ -56,7 +56,6 @@ module SendWithUs
     # Sends multiple emails through one post request
     # send_params : array of send's params
     def batched_send(send_params_array)
-      debugger
       batched_payload = []
 
       send_params_array.each do |sp|
